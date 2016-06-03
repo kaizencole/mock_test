@@ -1,4 +1,5 @@
 require_relative 'item'
+require_relative 'box_of_bolts'
 
 class Robot
 
@@ -9,9 +10,9 @@ class Robot
 
   def initialize
     @position = [0,0]
-    @health = 50
+    @health = 60
     @items = []
-    @equipped_weapon = Laser.new
+    @equipped_weapon = nil
   end
 
   def move_left
@@ -34,11 +35,18 @@ class Robot
 
   def pick_up(item)
     @items.push(item) unless items_weight + item.weight > CAPACITY
-    @equipped_weapon = item if item.is_a?(Weapon)
+    @equipped_weapon = item  if item.is_a?(Weapon) 
+    if item.is_a?(BoxOfBolts) 
+      item.feed(self) if self.health <= 80
+    end
   end
 
   def items_weight
+    # if item == nil
+    #   items_weight = 0
+    # else
     @items.inject(0) {|sum, item| sum + item.weight}
+    # end
   end
 
   def wound(damage)
@@ -65,13 +73,29 @@ class Robot
     raise Exception.new("Can only attack a robot.")
   end
 
+  def too_far
+    raise Exception.new("Enemy is too far.")
+  end
+
   def attack(enemy)
     begin
       if enemy.is_a?(Robot)
-        puts 'WAS A ROBOT'
-        equipped_weapon.hit(enemy)
+        if (enemy.position[0] - self.position[0]).abs == 1 || (enemy.position[1] - self.position[1]).abs == 1
+          equipped_weapon.hit(enemy)
+        elsif (enemy.position[0] - self.position[0]).abs == 2 || (enemy.position[1] - self.position[1]).abs == 2
+          if equipped_weapon.is_a?(Grenade)
+            equipped_weapon.hit(enemy)
+            @items.delete(equipped_weapon)
+            self.equipped_weapon = nil
+          else
+            nil
+          end
+        else
+          nil
+        end
+      # rescue Exception => e
+      #   puts e.message
       else
-        puts 'WAS NOT A ROBOT'
         bad_target
       end
     rescue Exception => e

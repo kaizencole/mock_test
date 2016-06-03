@@ -2,6 +2,8 @@
 # So if an enemy robot is directly above, below, or next to the robot, then it will wound the enemy robot
 # Otherwise the attack method should not do anything
 
+require_relative 'spec_helper'
+
 describe Robot do
   before :each do
     @robot = Robot.new
